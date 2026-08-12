@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>111-115年國考消化系統解剖/組織/胚胎學 閃卡 APP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .perspective-1000 { perspective: 1000px; }
+    .transform-style-3d { transform-style: preserve-3d; }
+    .backface-hidden { backface-visibility: hidden; }
+    .rotate-y-180 { transform: rotateY(180deg); }
+    .transition-transform-600 { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased selection:bg-teal-500 selection:text-white">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    // RAW DATA MATRIX (Q1 - Q157)
+    const rawQuestions = [
+      { id: 1, year: "111", exam: "放射師", q: "Q1. 下列何者最可能與脾靜脈（splenic vein）匯合形成肝門靜脈（hepatic portal vein）？", options: ["A. 肝靜脈（hepatic vein）", "B. 下腔靜脈（inferior vena cava）", "C. 腸繫膜下靜脈（inferior mesenteric vein）", "D. 腸繫膜上靜脈（superior mesenteric vein）"], ans: "D", detail: "腸繫膜上靜脈與脾靜脈在胰臟頸部後方匯合，形成肝門靜脈。下腸繫膜靜脈通常先匯入脾靜脈（或匯入兩者交界處）。" },
+      { id: 2, year: "111", exam: "放射師", q: "Q2. 裂孔疝氣（hiatal hernia）是指胃的一部分突出下列何種構造？", options: ["A. 橫膈（diaphragm）的腔靜脈開口（caval opening）", "B. 橫膈（diaphragm）的食道裂孔（esophageal hiatus）", "C. 橫膈（diaphragm）的主動脈裂孔（aortic hiatus）", "D. 胸廓上口（superior thoracic aperture）"], ans: "B", detail: "裂孔疝氣指腹腔內臟器（主要是胃的一部分）經由橫膈的「食道裂孔」突入胸腔。" },
+      { id: 3, year: "111", exam: "放射師", q: "Q3. 關於胰臟（pancreas）的敘述，下列何者錯誤？", options: ["A. 具有外、內分泌功能的腺體", "B. 位於胃之後，從十二指腸往左延伸，位於脾臟右方", "C. 主胰管（main pancreatic duct）連結膽管而形成肝胰壺腹，並於十二指腸大乳頭處注入十二指腸", "D. 胰臟主要接受腸繫膜下動脈（inferior mesenteric artery）的血液"], ans: "D", detail: "胰臟的血液供應主要來自腹腔動脈幹的分支（如脾動脈、胰十二指腸上動脈）以及腸繫膜上動脈（如胰十二指腸下動脈），而非腸繫膜下動脈。" },
+      { id: 4, year: "111", exam: "牙醫師", q: "Q4. 有關口腔腺體的敘述，下列何者正確？", options: ["A. 口腔小唾液腺包括有唇腺、頰腺、腭腺、舌腺、門齒腺等腺體", "B. 顎下腺的腺泡細胞主要為黏液腺泡", "C. 舌下腺大部分由漿液腺泡組成", "D. 腮腺的唾液產量最高，亦是唾液腺結石發生率最高的腺體"], ans: "A", detail: "顎下腺為混合腺，以漿液性腺泡為主（B錯）；舌下腺大部分由黏液性腺泡組成（C錯）；顎下腺的每日唾液總產量最高（約占 60-65%），且因為導管較長、走向往上抗重力，且分泌物較黏稠、含鈣量高，是最容易發生唾液腺結石的腺體（D錯）。" },
+      { id: 5, year: "111", exam: "牙醫師", q: "Q5. 關於圖片中之標示，下列敘述何者錯誤？ (註：標示D涉及頭頸靜脈)", options: ["A. 標示A：內頸動脈", "B. 標示B：舌下腺", "C. 標示C：舌下神經伴行靜脈", "D. 標示D：外頸靜脈"], ans: "D", detail: "標示D應為內頸靜脈（internal jugular vein），而非外頸靜脈。外頸靜脈走在胸鎖乳突肌表面。", img: "image_e44a3d.png" },
+      { id: 6, year: "111", exam: "牙醫師", q: "Q6. 關於咽收縮肌群的敘述下列何者正確？", options: ["A. 上、中、下咽收縮肌皆為成對之縱向肌肉", "B. 當進行吞嚥行為時，上咽收縮肌會協助隔絕口咽部與鼻咽部", "C. 中咽收縮肌與中耳功能之調節有關", "D. 咽部與喉部之間的空間稱為咽後間隙"], ans: "B", detail: "咽收縮肌群為環走（橫向）肌肉，負責吞嚥時推動食物；上咽收縮肌在吞嚥時與軟腭共同作用，協助隔絕口咽與鼻咽，防止食物反流。中耳功能調節（耳咽管開放）是由腭帆張肌與腭帆提肌負責。" },
+      { id: 7, year: "111", exam: "牙醫師", q: "Q7. 有關於喉咽（laryngopharynx）的敘述，下列何者正確？", options: ["A. 上方連接鼻咽（nasopharynx）", "B. 上緣的位置是會厭（epiglottis）", "C. 下緣的水平位置約在胸椎第六節的位置", "D. 下方為氣管（trachea）"], ans: "B", detail: "喉咽上緣位於會厭上緣，下緣約在第六頸椎（C6）水平（而非胸椎C6），下方延續為食道。" },
+      { id: 8, year: "111", exam: "牙醫師", q: "Q8. 關於排泄管（excretory duct）的敘述，下列何者錯誤？", options: ["A. 在較大型之排泄管可發現杯狀細胞（goblet cells）", "B. 在某些管壁細胞之基底處可發現神經末梢", "C. 不具調節唾液成分之功能", "D. 小葉間排泄管之內襯上皮主要為偽複層柱狀上皮"], ans: "C", detail: "排泄管（尤其是較大型排泄管）的管壁細胞能通過主動重吸收或分泌電解質，對唾液的最終離子成分和滲透壓仍具有一定的調節作用，故「不具調節功能」是錯誤的。" },
+      { id: 9, year: "111", exam: "牙醫師", q: "Q9. 人類的唾液腺中，下列何者最早發育？", options: ["A. 腮腺（parotid gland）", "B. 顎下腺（submandibular gland）", "C. 舌下腺（sublingual gland）", "D. 小唾液腺（minor gland）"], ans: "A", detail: "腮腺是胚胎發育中最早出現的唾液腺，約在胚胎第 6 週開始發育；其次是顎下腺（第 6 週晚期）與舌下腺（第 7-8 週）。" },
+      { id: 10, year: "111", exam: "牙醫師", q: "Q10. 下列何者無漿液性新月細胞（serous demilune）？", options: ["A. 腮腺（parotid gland）", "B. 顎下腺（submandibular gland）", "C. 舌下腺（sublingual gland）", "D. 小唾液腺（minor gland）"], ans: "A", detail: "腮腺在成人為純漿液性腺體，不含黏液腺泡，因此不具有包覆在混合腺泡周圍的「漿液性新月細胞」。" },
+      { id: 11, year: "111", exam: "醫師", q: "Q11. 口腔底部近會厭軟骨（epiglottis）的黏膜，其神經支配為：", options: ["A. 舌神經（lingual nerve）", "B. 舌咽神經（glossopharyngeal nerve）", "C. 鼓索神經（chorda tympani nerve）", "D. 內喉神經（internal laryngeal nerve）"], ans: "D", detail: "舌根最深處與會厭軟骨附近的黏膜感覺由迷走神經（CN X）的分支——內喉神經（internal laryngeal nerve）支配。" },
+      { id: 12, year: "111", exam: "醫師", q: "Q12. 下列何區的一般感覺，是第五對腦神經第三分支（CN V3）負責？", options: ["A. 硬顎", "B. 鼻腔內", "C. 下眼瞼", "D. 口腔內頰"], ans: "D", detail: "口腔內頰一般感覺由三叉神經下頜支（CN V3）的頰神經（buccal nerve）支配。硬顎、下眼瞼由上頜支（CN V2）支配；鼻腔由 CN V1 及 CN V2 支配。" },
+      { id: 13, year: "111", exam: "醫師", q: "Q13. 下列何者與網膜孔（omental foramen）的關係位置不正確？", options: ["A. 總膽管在其後方", "B. 肝門靜脈在其前方", "C. 肝臟在其上方", "D. 十二指腸在其下方"], ans: "A", detail: "肝門三體（包含總膽管、肝固有動脈、肝門靜脈）位於小網膜的游離邊緣內，此結構位於網膜孔（Winslow孔）的前方（前界），而非後方。" },
+      { id: 14, year: "111", exam: "醫師", q: "Q14. 關於直腸（rectum），下列敘述何者正確？", options: ["A. 直腸的黏膜非常平滑，沒有任何皺褶", "B. 提肛肌（levator ani）及肛尾韌帶（anococcygeal ligament）協助維持直腸與鄰近構造間的關係", "C. 腹膜（peritoneum）只覆蓋到乙狀結腸，並未覆蓋到直腸", "D. 肛管直腸彎曲（anorectal flexure）大略成80°，這主要是由U字型的尾骨肌所造成"], ans: "B", detail: "直腸黏膜有橫行皺襞（直腸橫襞/valves of Houston）（A錯）；腹膜覆蓋在直腸上1/3（前側與兩側）及中1/3（僅前側）（C錯）；肛管直腸彎曲是由U字型的恥骨直腸肌（puborectalis，提肛肌的一部分）拉動維持，而非尾骨肌（D錯）。" },
+      { id: 15, year: "111", exam: "醫師", q: "Q15. 下列何者是膽汁（bile）運送之管道？", options: ["A. 赫林氏管（canal of Hering）", "B. 狄氏腔（space of Disse）", "C. 肝竇（hepatic sinusoid）", "D. 乳糜管（lacteal）"], ans: "A", detail: "膽小管中的膽汁流經赫林氏管（canal of Hering），再匯入小葉間膽管。狄氏腔與肝竇與血液循環有關，乳糜管是吸收脂肪的淋巴管。" },
+      { id: 16, year: "111", exam: "醫師", q: "Q16. 下列何種細胞具有外分泌（exocrine）以及類似內分泌（endocrine-like）的功能？", options: ["A. 肝細胞（hepatocytes）", "B. 胰島細胞（pancreatic islet cells）", "C. 唾液腺腺泡細胞（salivary acinar cells）", "D. 庫弗氏細胞（Kupffer cells）"], ans: "A", detail: "肝細胞具有雙重分泌功能：外分泌（分泌膽汁進入膽小管）與類似內分泌（合成並直接釋放血糖、血漿蛋白、各種激素等進入血液）。" },
+      { id: 17, year: "111", exam: "物治/職治", q: "Q17. 下列何者不屬於肝門靜脈系統（hepatic portal system）？", options: ["A. 上腸繫膜靜脈（superior mesenteric vein）", "B. 脾靜脈（splenic vein）", "C. 下腸繫膜靜脈（inferior mesenteric vein）", "D. 肝靜脈（hepatic vein）"], ans: "D", detail: "肝靜脈是回收肝臟微血管中的血液並直接匯入「下腔靜脈（IVC）」，不屬於收集胃腸道血液至肝臟的「肝門靜脈系統」。" },
+      { id: 18, year: "111", exam: "物治/職治", q: "Q18. 腭扁桃體（palatine tonsil）位在下列那一個區域？", options: ["A. 鼻咽（nasopharynx）", "B. 口咽（oropharynx）", "C. 喉咽（laryngopharynx）", "D. 喉部（larynx）"], ans: "B", detail: "腭扁桃體位在口咽側壁的腭舌弓與腭咽弓之間。" },
+      { id: 19, year: "111", exam: "放射師", q: "Q19. 有關肛管（anal canal）的敘述，下列何者正確？", options: ["A. 肛柱（anal column）的靜脈回流會注入肝門靜脈（hepatic portal vein）", "B. 外肛門括約肌（external anal sphincter）由平滑肌組成", "C. 內肛門括約肌（internal anal sphincter）由骨骼肌組成", "D. 肛管大約是15～16公分長"], ans: "A", detail: "肛柱位於齒狀線上方，其靜脈回流匯入直腸上靜脈，進而注入下腸繫膜靜脈及肝門靜脈系統（A正確）。外肛門括約肌為骨骼肌（隨意肌），內肛門括約肌為平滑肌（非隨意肌），肛管長度僅約3-4公分。" },
+      { id: 20, year: "111", exam: "放射師", q: "Q20. 關於小腸肌外層（muscularis externa）的敘述，下列何者正確？", options: ["A. 內層肌肉為環行走向", "B. 外層肌肉為環行走向", "C. 前1/3段為骨骼肌，其後漸轉為平滑肌", "D. 包含有發達的排泄小管"], ans: "A", detail: "小腸的外肌層為典型的內環（inner circular）、外縱（outer longitudinal）平滑肌構造。食道的前1/3才是骨骼肌，小腸全段外肌層均為平滑肌。" },
+      { id: 21, year: "111", exam: "放射師", q: "Q21. 下列那一個器官有腹膜（peritoneum）完整包覆？", options: ["A. 胰臟", "B. 輸尿管", "C. 闌尾", "D. 升結腸"], ans: "C", detail: "闌尾具有繫膜且被腹膜完全包覆，屬於腹膜內器官。胰臟（除了尾部）及輸尿管為腹膜後器官；升結腸屬於後腹膜（僅前側與兩側覆蓋）。" },
+      { id: 22, year: "111", exam: "放射師", q: "Q22. 黏膜固有層（lamina propria）位於下列那一層？", options: ["A. 漿膜層（serosa）", "B. 黏膜層（mucosa）", "C. 外肌層（muscularis externa）", "D. 黏膜下層（submucosa）"], ans: "B", detail: "消化道的黏膜層由上皮、黏膜固有層與黏膜肌層三者組成。" },
+      { id: 23, year: "111", exam: "牙醫師", q: "Q23. 下列那一條肌肉不會與顎下腺相接觸？", options: ["A. 舌骨舌肌", "B. 頦舌肌", "C. 莖突舌骨肌", "D. 莖突舌肌"], ans: "B", detail: "頦舌肌（genioglossus）位於口腔底部更內側深部，不與顎下腺表面接觸。顎下腺與下顎舌骨肌、舌骨舌肌、莖突舌骨肌以及二腹肌等有鄰接接觸。" },
+      { id: 24, year: "111", exam: "牙醫師", q: "Q24. 關於莖突舌肌的敘述，下列何者錯誤？", options: ["A. 源自於莖突及其延伸之莖突下顎韌帶", "B. 走向為往下、往前及往內", "C. 與舌內之上縱肌相混合", "D. 為舌部之後縮肌與提肌"], ans: "B", detail: "莖突舌肌起源自顳骨莖突，向「前、下、外（側）」行進至舌的側面，與舌橫肌、縱肌混合。其主要動作為向後、向上拉動舌頭（後縮與上提）。" },
+      { id: 25, year: "111", exam: "牙醫師", q: "Q25. 咽收縮肌群的止點為下列何者？", options: ["A. 中央腭縫", "B. 翼下顎縫", "C. 咽結節", "D. 中央咽縫"], ans: "D", detail: "上、中、下咽收縮肌在後方中線相遇並融合成「中央咽縫（pharyngeal raphe）」。" },
+      { id: 26, year: "111", exam: "牙醫師", q: "Q26. 下列那一對顱神經支配咽收縮肌群？", options: ["A. 第7對", "B. 第10對", "C. 第11對", "D. 第12對"], ans: "B", detail: "咽部肌肉主要（除了莖突咽肌由CN IX支配外）皆由迷走神經（CN X）經咽神經叢支配。" },
+      { id: 27, year: "111", exam: "牙醫師", q: "Q27. 關於軟腭肌肉的敘述，下列何者正確？", options: ["A. 皆為成對肌肉", "B. 皆由迷走神經支配", "C. 起點皆為中央咽縫", "D. 皆與舌頭的運動有關"], ans: "A", detail: "軟腭的肌肉均為左右成對的雙側肌肉（腭帆張肌、腭帆提肌、腭舌肌、腭咽肌、懸壅垂肌）。其中，腭帆張肌是由三叉神經（CN V3）支配，其他由CN X支配（B錯）。" },
+      { id: 28, year: "111", exam: "物治/職治", q: "Q28. 有關咽（pharynx）的敘述，下列何者錯誤？", options: ["A. 口咽黏膜的上皮是複層扁平上皮", "B. 鼻咽主要傳導空氣", "C. 咽縮肌是咽的內層肌群，可緊縮咽壁幫助吞嚥", "D. 咽具有非常豐富的淋巴組織，可聚集形成扁桃體"], ans: "C", detail: "咽收縮肌群是咽的外層（環走）肌群，而非內層肌群。咽的內層肌群為縱走肌（如莖突咽肌、腭咽肌、耳咽管咽肌），負責上提咽部。" },
+      { id: 29, year: "111", exam: "物治/職治", q: "Q29. 關於大網膜（greater omentum）的構造，下列敘述何者正確？", options: ["A. 是雙層腹膜的構造", "B. 在一定的高度往上反折後，再與胃大彎連接", "C. 大網膜下方在出生後會融合，因此成人的下隱窩較剛出生時小", "D. 屬腹側繫膜"], ans: "C", detail: "大網膜是由四層腹膜構成的摺疊（A錯）；它從胃大彎向下延伸如圍裙，再向上反折連接到橫結腸（B錯）；它源自胚胎發育時期的背側繫膜（D錯）。在出生後，大網膜前兩層與後兩層之間的空腔（網膜囊下隱窩）會發生融合關閉，使成人的下隱窩極小或消失（C正確）。" },
+      { id: 30, year: "111", exam: "醫師", q: "Q30. 下列何者是腹膜後器官（retroperitoneal organ）？", options: ["A. 肝臟（liver）", "B. 胃（stomach）", "C. 空腸（jejunum）", "D. 胰臟（pancreas）"], ans: "D", detail: "胰臟（除尾部外）在發育中貼向後腹壁，屬於二級腹膜後器官。肝臟、胃、空腸為腹膜內器官。" },
+      { id: 31, year: "111", exam: "醫師", q: "Q31. 肝圓韌帶（round ligament of liver）是何種結構的遺跡？", options: ["A. 靜脈導管（ductus venosus）", "B. 臍靜脈（umbilical vein）", "C. 臍動脈（umbilical artery）", "D. 臍尿管（urachus）"], ans: "B", detail: "胎兒時期的（左）臍靜脈在出生閉鎖後，退化形成肝圓韌帶。" },
+      { id: 32, year: "111", exam: "醫師", q: "Q32. 下列何者受損對肛管（anal canal）管壁肌肉的收縮影響最大？", options: ["A. 腰內臟神經", "B. 骨盆內臟神經", "C. 薦交感神經幹", "D. 會陰神經"], ans: "D", detail: "肛管的外肛門括約肌是由骨骼肌組成的隨意肌，其收縮受陰部神經的分支——下直腸神經（或會陰神經的分支）控制。一旦受損會失去排便的控制力。" },
+      { id: 33, year: "111", exam: "醫師", q: "Q33. 在胚胎發育至第幾週時，小腸會由體外返回腹腔內？", options: ["A. 第四週", "B. 第七週", "C. 第十週", "D. 第十二週"], ans: "C", detail: "中腸的生理性疝出發生在第 6 週，當腹腔空間增大及中腸停止旋轉發育後，小腸約在第 10 週自臍帶內返回腹腔。" },
+      { id: 34, year: "111", exam: "醫師", q: "Q34. 下列有關舌輪廓乳突（circumvallate papillae）的敘述，何者正確？", options: ["A. 分布在舌外側且與舌長軸平行", "B. 含有許多味蕾（taste bud）", "C. 是舌乳突中最小且數量最多", "D. 表面覆有單層扁平上皮"], ans: "B", detail: "輪廓乳突呈 V 字形排列在舌界溝前方，數量僅 8-12 個，但每個乳突側面都含有非常豐富的味蕾（B正確）。絲狀乳突才是最小且數量最多（C錯），口腔黏膜上皮均為複層扁平上皮（D錯）。" },
+      { id: 35, year: "111", exam: "醫師", q: "Q35. 下列有關十二指腸、空腸、迴腸三者的結構比較，何項正確？", options: ["A. 空腸有最多的杯狀細胞", "B. 迴腸有最多的絨毛", "C. 十二指腸有Brunner's gland", "D. 十二指腸有最多且明顯的Peyer's patch"], ans: "C", detail: "Brunner's glands（十二指腸腺）位於十二指腸的黏膜下層（C正確）。杯狀細胞比例往小腸後段愈高，故迴腸最多（A錯）；絨毛與環狀襞在空腸最發達且數量最多（B錯）；Peyer's patches（聚集淋巴結）主要且極多分布在迴腸（D錯）。" },
+      { id: 36, year: "111", exam: "物治/職治", q: "Q36. 下列何者不是腹腔動脈幹（celiac trunk）的直接分支？", options: ["A. 下膈動脈（inferior phrenic artery）", "B. 脾動脈（splenic artery）", "C. 左胃動脈（left gastric artery）", "D. 總肝動脈（common hepatic artery）"], ans: "A", detail: "腹腔動脈幹的三大直接分支為左胃動脈、脾動脈和總肝動脈。下膈動脈通常直接起源自腹主動脈。" },
+      { id: 37, year: "111", exam: "物治/職治", q: "Q37. 右側腎臟的位置較左側腎臟低，主要是因為受到下列那一器官擠壓的影響？", options: ["A. 胃（stomach）", "B. 脾臟（spleen）", "C. 肝臟（liver）", "D. 胰臟（pancreas）"], ans: "C", detail: "肝臟（特別是其巨大的右葉）佔據了腹腔右上象限的大量空間，在發育與解剖位置上會向下推擠右側腎臟，因此右側腎臟的位置通常比左側腎臟略低。" },
+      { id: 38, year: "112", exam: "放射師", q: "Q38. 膽囊一般位於肝臟的：", options: ["A. 右葉與方形葉（quadrate lobe）之間", "B. 右葉與尾狀葉（caudate lobe）之間", "C. 左葉與方形葉（quadrate lobe）之間", "D. 左葉與尾狀葉（caudate lobe）之間"], ans: "A", detail: "膽囊窩位於肝臟臟面，處於右葉（right lobe）與方形葉（quadrate lobe）之間的前緣。" },
+      { id: 39, year: "112", exam: "放射師", q: "Q39. 消化系統中，下列何處的淋巴組織分布最多？", options: ["A. 肝臟", "B. 大腸", "C. 小腸", "D. 食道"], ans: "C", detail: "小腸（特別是迴腸）含有極為豐富的瀰漫性與聚集性淋巴小結（如 Peyer's patches），是整個消化道中淋巴組織分布最多、最密集的區域。" },
+      { id: 40, year: "112", exam: "放射師", q: "Q40. 在消化系統中，下列何者有骨骼肌（skeletal muscle）的分布？", options: ["A. 小腸", "B. 大腸", "C. 直腸", "D. 肛門"], ans: "D", detail: "肛門周圍的外肛門括約肌（external anal sphincter）由骨骼肌（隨意肌）構成，負責自主控制排便。其餘小腸、大腸、直腸的外肌層均為平滑肌。" },
+      { id: 41, year: "112", exam: "牙醫師", q: "Q41. 下列何腺體其黏液性腺胞較漿液性腺胞多？", options: ["A. 舌下腺", "B. 顎下腺", "C. 腮腺", "D. 馮艾勃納氏腺（von Ebner glands）"], ans: "A", detail: "舌下腺為混合腺，但以黏液性腺泡為主。顎下腺以漿液性腺泡為主；腮腺與馮艾勃納氏腺為純漿液性腺體。" },
+      { id: 42, year: "112", exam: "牙醫師", q: "Q42. 有關舌頭的發育與體感覺神經支配的敘述，下列何者正確？", options: ["A. 舌頭前段是由第三鰓弓構成", "B. 舌頭後段是由第一及第二鰓弓構成", "C. 舌頭前段由三叉神經支配", "D. 舌頭後段是由舌下神經支配"], ans: "C", detail: "舌前 2/3（前段）來自第一鰓弓，由三叉神經下頜支之舌神經支配一般感覺（C正確）。舌後 1/3 主要由第三、四鰓弓發育而來，由舌咽神經（CN IX）與迷走神經（CN X）支配。" },
+      { id: 43, year: "112", exam: "牙醫師", q: "Q43. 關於在下顎骨內側面的下顎舌骨線的敘述，下列何者正確？", options: ["A. 頦舌肌附著在此，形成口腔的底部", "B. 下顎骨在此線之上可成為口腔壁的一部分", "C. 下顎骨在此線之下形成舌下隙的內側壁", "D. 頦舌骨肌附著於此，形成口腔的底部"], ans: "B", detail: "下顎舌骨線（mylohyoid line）是下顎舌骨肌的起點，此肌構成口腔底。在此線上方，下顎骨直接面對口腔，屬於口腔壁（B正確）。" },
+      { id: 44, year: "112", exam: "牙醫師", q: "Q44. 下列何者不屬於舌骨上肌群？", options: ["A. 二腹肌", "B. 頦舌骨肌", "C. 下顎舌骨肌", "D. 甲狀舌骨肌"], ans: "D", detail: "甲狀舌骨肌（thyrohyoid）屬於舌骨下肌群，其餘為舌骨上肌群。" },
+      { id: 45, year: "112", exam: "牙醫師", q: "Q45. 下列何者不屬於咀嚼肌？", options: ["A. 外翼肌", "B. 頰肌", "C. 顳肌", "D. 咬肌"], ans: "B", detail: "咀嚼肌（咬肌、顳肌、內翼肌、外翼肌）由 CN V3 支配。頰肌（buccinator）屬於表情肌，由顏面神經（CN VII）支配。" },
+      { id: 46, year: "112", exam: "牙醫師", q: "Q46. 嘔吐反射（gag reflex）的主要感覺傳導支（afferent limb）為顱神經的那一支？", options: ["A. 第5對", "B. 第7對", "C. 第9對", "D. 第11對"], ans: "C", detail: "嘔吐反射的傳入（感覺）支為第九對腦神經（舌咽神經 CN IX）；傳出支為第十對腦神經（迷走神經 CN X）。" },
+      { id: 47, year: "112", exam: "牙醫師", q: "Q47. 關於上咽收縮肌的敘述，下列何者正確？", options: ["A. 起點位於喉部", "B. 止點是中央咽縫", "C. 肌肉纖維和莖突咽肌有交錯", "D. 肌肉的走向為縱向"], ans: "B", detail: "咽收縮肌群為環狀纖維走向，止點均為後方的中央咽縫。" },
+      { id: 48, year: "112", exam: "醫師", q: "Q48. 下列何者由第九對腦神經（CN IX）負責？", options: ["A. 舌頭後 1/3 的肌肉運動", "B. 耳廓的一般感覺", "C. 腭帆張肌的收縮", "D. 莖突咽肌（stylopharyngeus）的收縮"], ans: "D", detail: "莖突咽肌是唯一由舌咽神經（CN IX）支配運動的神經。舌肌肉運動由 CN XII 支配；腭帆張肌由 CN V3 支配。" },
+      { id: 49, year: "112", exam: "醫師", q: "Q49. 下列何者走在舌骨舌肌（hyoglossus muscle）的外表面，向前進入下頷舌骨肌的深層？", options: ["A. 舌動脈", "B. 舌神經與顎下腺導管", "C. 舌咽神經", "D. 喉上神經"], ans: "B", detail: "走在舌骨舌肌外表面的結構，由上至下主要有：舌神經（lingual nerve）、顎下腺導管（Wharton's duct）、舌下神經（hypoglossal nerve）。" },
+      { id: 50, year: "112", exam: "醫師", q: "Q50. 肝門三體（portal triad）中不包含下列何種結構？", options: ["A. 膽管（bile duct）", "B. 肝動脈（hepatic artery）", "C. 肝門靜脈（hepatic portal vein）", "D. 膽囊管（cystic duct）"], ans: "D", detail: "肝門三體（在肝小葉角處）由小葉間膽管、小葉間動脈、小葉間靜脈構成，膽囊管不在此結構中。" },
+      { id: 51, year: "112", exam: "醫師", q: "Q51. 闌尾最不可能在下列何處出現？", options: ["A. 盲腸前（prececal）", "B. 迴腸後（postileal）", "C. 骨盆緣（pelvic brim）", "D. 盲腸後（retrocecal）"], ans: "A", detail: "闌尾位置最常見的是盲腸後（約占 65%），其次是骨盆腔/骨盆緣。解剖學上「盲腸前」是不存在或最不可能的正常變異位置。" },
+      { id: 52, year: "112", exam: "醫師", q: "Q52. 下列何者為舌頭咽喉部（pharyngeal part of tongue）的胚胎起源？", options: ["A. 遠端舌芽", "B. 中央舌芽", "C. 盲孔", "D. 咽下隆起（hypopharyngeal eminence）"], ans: "D", detail: "舌前 2/3 來自第一咽弓（中央舌芽與遠端舌芽）；舌後 1/3（咽喉部）來自第三、四咽弓的「咽下隆起（hypopharyngeal eminence）」。" },
+      { id: 53, year: "112", exam: "醫師", q: "Q53. 發育正常的胚胎至第幾週時，會發生生理性臍疝（physiological umbilical herniation）？", options: ["A. 第六週", "B. 第八週", "C. 第十週", "D. 第十二週"], ans: "A", detail: "胚胎發育至第六週時，因為中腸發育極快、腹腔空間相對不足，會產生生理性臍疝突入臍帶內。第十週返回腹腔。" },
+      { id: 54, year: "112", exam: "醫師", q: "Q54. 有關肝臟（liver）的組織結構，下列敘述何者正確？", options: ["A. 庫弗氏細胞是肝細胞特化形成，功能是貯存養分", "B. 肝血竇的管壁是屬於連續型內皮", "C. 狄氏空間（space of Disse）是位於肝細胞和肝血竇之間", "D. 伊東細胞是大且圓形，有吞噬老化細胞的功能"], ans: "C", detail: "狄氏空間是內皮細胞與肝細胞表面之間的狹窄間隙，供物質交換（C正確）。Kupffer 細胞為單核吞噬細胞系統（A錯）；肝血竇內皮是不連續有窗孔的（B錯）；Ito 細胞（星狀細胞）主要儲存維生素 A（D錯）。" },
+      { id: 55, year: "112", exam: "醫師", q: "Q55. 下列關於結腸（colon）組織結構的敘述，何者正確？", options: ["A. 上皮具有許多杯狀細胞，能分泌黏液保護腸黏膜和潤滑糞便", "B. 上皮細胞有發達的微絨毛，以利吸收消化物中的水分", "C. 結腸帶由肌外層的環走平滑肌所形成", "D. 有發達的環狀襞"], ans: "A", detail: "結腸黏膜上皮不具絨毛與環狀襞（B、D錯），但有非常豐富的隱窩，內含極大量的杯狀細胞（A正確）；結腸帶是由縱走平滑肌局部增厚形成（C錯）。" },
+      { id: 56, year: "112", exam: "物治/職治", q: "Q56. 下列何者是下腸繫膜動脈（inferior mesenteric artery）的直接分支？", options: ["A. 腎動脈", "B. 乙狀結腸動脈（sigmoidal artery）", "C. 卵巢動脈", "D. 右結腸動脈"], ans: "B", detail: "IMA分支包含左結腸動脈、乙狀結腸動脈及上直腸動脈。" },
+      { id: 57, year: "112", exam: "物治/職治", q: "Q57. 下列那一構造中含有骨骼肌（skeletal muscle）？", options: ["A. 賁門括約肌", "B. 幽門括約肌", "C. 迴盲瓣", "D. 肛門外括約肌（external anal sphincter）"], ans: "D", detail: "外括約肌屬於受軀體運動神經控制的骨骼肌。其餘為胃腸壁的平滑肌。" },
+      { id: 58, year: "112", exam: "牙醫師", q: "Q58. 關於硬腭及軟腭解剖構造的敘述，下列何者正確？", options: ["A. 硬腭有較厚的黏膜皺壁，含有排列複雜的肌肉", "B. 軟腭含有緻密的黏膜下組織與角化上皮結構", "C. 硬腭含有較豐富密集的血管及腺體結構，顏色為淡紅色", "D. 軟腭中間游離端延伸至懸壅垂，仍然為典型的口腔複層鱗狀上皮所覆蓋"], ans: "D", detail: "軟腭及懸壅垂表面覆蓋的是口腔黏膜之非角化複層鱗狀上皮（D正確）。硬腭底下為骨頭，無肌肉結構。" },
+      { id: 59, year: "112", exam: "牙醫師", q: "Q59. 下列那一條肌肉是中咽縮肌？", options: ["A. 頭咽肌", "B. 舌骨咽肌（hyopharyngeus）", "C. 喉咽肌", "D. 莖突咽肌"], ans: "B", detail: "中咽收縮肌附著於舌骨大角與小角，又稱為舌骨咽肌（hyopharyngeus）。" },
+      { id: 60, year: "112", exam: "牙醫師", q: "Q60. 釋出副交感神經以支配顎下腺與舌下腺的顎下神經節，主要是接收那一條神經的節前纖維？", options: ["A. 舌神經", "B. 顏面神經（CN VII）", "C. 舌咽神經", "D. 下齒槽神經"], ans: "B", detail: "分泌唾液的副交感神經節前纖維源自顏面神經（CN VII）的鼓索神經，在顳下窩匯入舌神經，最後抵達顎下神經節。" },
+      { id: 61, year: "112", exam: "牙醫師", q: "Q61. 舌外在肌群中，下列那一條肌肉非舌下神經所支配？", options: ["A. 頦舌肌", "B. 腭舌肌（palatoglossus）", "C. 舌骨舌肌", "D. 莖突舌肌"], ans: "B", detail: "腭舌肌（palatoglossus）為軟腭肌肉，由迷走神經（CN X）支配，其他皆由 CN XII 支配。" },
+      { id: 62, year: "112", exam: "牙醫師", q: "Q62. 下列何者為支配軟腭感覺的神經？", options: ["A. 鼻腭神經", "B. 大腭神經", "C. 小腭神經（lesser palatine nerve）", "D. 後上齒槽神經"], ans: "C", detail: "軟腭的黏膜感覺由三叉神經 CN V2 分支而來之小腭神經負責。硬腭由大腭神經及鼻腭神經負責。" },
+      { id: 63, year: "112", exam: "醫師", q: "Q63. 下列何者不是大腸（large intestine）的特徵？", options: ["A. 腸脂垂（omental appendices）", "B. 結腸帶（teniae coli）", "C. 結腸袋（haustra）", "D. 大彎（greater curvature）"], ans: "D", detail: "大彎（greater curvature）是胃的特徵，而非大腸。結腸具備腸脂垂、結腸帶、結腸袋三大特徵。" },
+      { id: 64, year: "112", exam: "醫師", q: "Q64. 直腸一般內臟感覺（visceral afferent）的初級神經元位於何處？", options: ["A. L4～5 之背根神經節", "B. L1～3 之背根神經節", "C. S2～4 之背根神經節", "D. T10～12 之背根神經節"], ans: "C", detail: "直腸痛覺與內臟感覺隨盆內臟神經（副交感）傳入，其細胞體位於 S2～S4 脊髓神經節（DRG）中。" },
+      { id: 65, year: "112", exam: "醫師", q: "Q65. 下列何者存在於胰臟（pancreas），而不存在於耳下腺（parotid gland）？", options: ["A. 酵素原細胞", "B. 泡心細胞（centroacinar cells）", "C. 小葉間管", "D. 閏管"], ans: "B", detail: "泡心細胞（centroacinar cells）是胰臟外分泌腺導管起始部的特有細胞，耳下腺等唾液腺並無此結構。" },
+      { id: 66, year: "112", exam: "醫師", q: "Q66. 下列有關唾液腺（salivary gland）的敘述，何者錯誤？", options: ["A. 耳下腺主要由漿液腺所組成", "B. 閏管構造在舌下腺中最為發達", "C. 下頜下腺由漿液腺與黏液腺混合組成", "D. 線紋管細胞的底部具有長條形的粒線體和底部胞膜皺褶"], ans: "B", detail: "閏管構造在耳下腺（腮腺）最發達且長，在舌下腺中最不發達、極短甚至常缺乏，故 B 敘述錯誤。" },
+      { id: 67, year: "112", exam: "物治/職治", q: "Q67. 有關胃部腺體（gastric gland）細胞和其分泌的物質，下列敘述何者正確？", options: ["A. 黏液細胞只有分布在胃底", "B. 壁細胞（parietal cell）的分泌物和維他命 B12 的吸收有關", "C. 主細胞分泌胃酸和胃蛋白酶", "D. 腸內分泌細胞分泌的內因子可以減少胃酸分泌"], ans: "B", detail: "胃壁細胞除了分泌胃酸外，還分泌內因子（intrinsic factor），此為迴腸吸收維生素 B12 所不可或缺的醣蛋白（B正確）。" },
+      { id: 68, year: "112", exam: "物治/職治", q: "Q68. 下列何者是供應空腸（jejunum）遠端的主要動脈？", options: ["A. 腹腔動脈幹", "B. 胃十二指腸動脈", "C. 腸繫膜上動脈（superior mesenteric artery）", "D. 腸繫膜下動脈"], ans: "C", detail: "整個空腸與迴腸的動脈血液供應主要都是直接源自腸繫膜上動脈（superior mesenteric artery）的分支。" },
+      { id: 69, year: "112", exam: "物治/職治", q: "Q69. 下列何者位於肝臟的方形葉（quadrate lobe）及右葉（right lobe）之間？", options: ["A. 膽囊（gallbladder）", "B. 肝靜脈", "C. 肝圓韌帶", "D. 靜脈韌帶"], ans: "A", detail: "膽囊位於方形葉與右葉之間（膽囊窩）。肝圓韌帶在方形葉與左葉之間。" },
+      { id: 70, year: "112", exam: "物治/職治", q: "Q70. 使用臼齒咀嚼食物時，下列何者主要協助將食物保持在臼齒與口腔側壁之間？", options: ["A. 嚼肌", "B. 顳肌", "C. 口輪匝肌", "D. 頰肌（buccinator）"], ans: "D", detail: "頰肌位於臉頰深部，其收縮能壓迫臉頰，使食物在咀嚼時保持在磨牙咬合面之間，防止食物堆積在口腔前庭。" },
+      { id: 71, year: "113", exam: "放射師", q: "Q71. 下列敘述何者正確？", options: ["A. 腹腔的鐮狀韌帶由腹膜構成", "B. 胃是腹膜後器官", "C. 大網膜連接胃小彎及迴腸", "D. 小網膜連接肝臟及橫結腸"], ans: "A", detail: "鐮狀韌帶是雙層腹膜構成的韌帶（A正確）。胃是腹膜內器官；大網膜自胃大彎向下延伸折返至橫結腸；小網膜連接胃小彎、十二指腸上段與肝門。" },
+      { id: 72, year: "113", exam: "放射師", q: "Q72. 關於大腸的敘述，下列何者正確？", options: ["A. 盲腸一般位於迴盲瓣上方，大約20公分長", "B. 右結腸曲又稱為肝曲（hepatic flexure），位於升結腸與橫結腸的交接處", "C. 乙狀結腸是大腸的最後一段，肛管不是大腸的一部分", "D. 結腸帶由膠原蛋白纖維組成"], ans: "B", detail: "右結腸曲又稱肝曲，介於升結腸與橫結腸之間（B正確）。盲腸在迴盲瓣下方；肛管為大腸末端；結腸帶由縱走平滑肌構成。" },
+      { id: 73, year: "113", exam: "放射師", q: "Q73. 關於扁桃腺（tonsil）位置的敘述，下列何者錯誤？", options: ["A. 顎扁桃腺位於口腔後方咽壁的兩側", "B. 咽扁桃腺（pharyngeal tonsil）位於喉部後壁上", "C. 舌扁桃腺位於舌頭後側", "D. 咽扁桃腺過度肥大又稱為腺樣體增生"], ans: "B", detail: "咽扁桃腺（pharyngeal tonsil，又稱腺樣體）位於鼻咽（nasopharynx）的後上壁，而非喉部（larynx）後壁。" },
+      { id: 74, year: "113", exam: "牙醫師", q: "Q74. 有關舌內在肌（intrinsic muscles of the tongue）的敘述，下列何者錯誤？", options: ["A. 功用為改變舌頭的形狀", "B. 由舌縱肌、舌直肌及舌橫肌組成", "C. 起源於舌骨", "D. 其支配神經為舌下神經"], ans: "C", detail: "舌內在肌（上/下縱肌、垂直肌、橫肌）無骨骼起點，不附著於舌骨。外在肌（如舌骨舌肌）才起源於舌骨。" },
+      { id: 75, year: "113", exam: "牙醫師", q: "Q75. 下列有關頰脂墊（buccal fat pad）的敘述，何者錯誤？", options: ["A. 位於頰肌與咬肌之間", "B. 整個頰脂墊有被囊（capsule）包住", "C. 可能與吸吮有關，故又稱吸吮墊", "D. 人消瘦時，會比皮下脂肪更快萎縮"], ans: "D", detail: "頰脂墊在長期飢餓或極度消瘦時，往往比皮下其他部位的脂肪更慢萎縮，以維持嬰兒哺乳與咀嚼時的側壁支撐功能。" },
+      { id: 76, year: "113", exam: "牙醫師", q: "Q76. 下列何者開口於舌下皺褶（sublingual fold）？", options: ["A. 史坦生氏管（Stensen’s duct）", "B. 華頓氏管（Wharton’s duct）", "C. 瑞非尼氏管（ducts of Rivinus）", "D. 巴索林氏管（Bartholin’s duct）"], ans: "C", detail: "舌下腺多個短小的小管（Rivinus小管）開口於舌下皺褶。Wharton管和Bartholin管共同開口於舌下肉阜。" },
+      { id: 77, year: "113", exam: "牙醫師", q: "Q77. 關於主唾液腺（major salivary glands）的敘述，下列何者錯誤？", options: ["A. 顎下腺之節後交感神經源於上頸神經節", "B. 腮腺之節後交感神經源於上頸神經節", "C. 舌下腺之節後副交感神經行經顏面神經", "D. 腮腺之節前副交感神經行經舌咽神經"], ans: "C", detail: "舌下腺的副交感神經節後纖維是由顎下神經節發出後，直接分佈至舌下腺，並不隨顏面神經走行。" },
+      { id: 78, year: "113", exam: "醫師", q: "Q78. 主胰管（main pancreatic duct）及膽管（bile duct）會共同開口於何處？", options: ["A. 十二指腸上段", "B. 十二指腸下降段（descending part）", "C. 十二指腸水平段", "D. 十二指腸上升段"], ans: "B", detail: "兩者合流形成大乳頭（肝胰壺腹），開口於十二指腸下降段的中內側壁。" },
+      { id: 79, year: "113", exam: "醫師", q: "Q79. 下列何者是上腸繫膜動脈（superior mesenteric artery）的分支？", options: ["A. 前上胰十二指腸動脈", "B. 後上胰十二指腸動脈", "C. 左結腸動脈", "D. 下胰十二指腸動脈（inferior pancreaticoduodenal artery）"], ans: "D", detail: "下胰十二指腸動脈是 SMA 向上發出的第一個大分支。前/後上胰十二指腸動脈來自胃十二指腸動脈。" },
+      { id: 80, year: "113", exam: "醫師", q: "Q80. 下列關於十二指腸（duodenum）發育的敘述，何者最適當？", options: ["A. 由前腸與後腸共同發育而來", "B. 血液供應有上腸繫膜動脈與下腸繫膜動脈", "C. 因胃的旋轉使十二指腸旋轉至右側，並且大部分貼在後腹壁", "D. 發育過程中均呈現中空管狀的結構"], ans: "C", detail: "胃旋轉使十二指腸移至右側並固定在後腹壁，成為二級腹膜後器官（C正確）。由前腸與中腸共同發育（A錯）；發育早期管腔會暫時充填閉塞再管道化（D錯）。" },
+      { id: 81, year: "113", exam: "醫師", q: "Q81. 下列何種細胞具有黏原顆粒（mucinogen granules）？", options: ["A. 胃賁門腺細胞（cardiac glandular cells）", "B. 胰腺泡細胞", "C. 耳下腺腺泡細胞", "D. 潘氏細胞（Paneth cells）"], ans: "A", detail: "胃賁門腺細胞主要分泌黏液，胞質頂端充滿黏原顆粒。胰及腮腺泡細胞含酵素原顆粒。" },
+      { id: 82, year: "113", exam: "物治/職治", q: "Q82. 下列何種構造在小腸與大腸皆有？", options: ["A. 絨毛（villus）", "B. 杯狀細胞（goblet cell）", "C. 環皺襞（circular fold）", "D. 腸脂垂（epiploic appendages）"], ans: "B", detail: "小腸與大腸均含有豐富的杯狀細胞。絨毛與環狀襞為小腸獨有；腸脂垂為大腸獨有。" },
+      { id: 83, year: "113", exam: "牙醫師", q: "Q83. 下列何者為位在頰肌及咬肌間之組織間隙？", options: ["A. 頦下間隙", "B. 顳下間隙", "C. 舌下間隙", "D. 頰間隙（buccal space）"], ans: "D", detail: "頰間隙（buccal space）位於頰肌外側面、咬肌前緣及面部皮膚皮下組織之間，內含頰脂墊。" },
+      { id: 84, year: "113", exam: "牙醫師", q: "Q84. 下列何者不直接參與咀嚼活動？", options: ["A. 三叉神經", "B. 顏面神經", "C. 迷走神經（vagus nerve）", "D. 舌下神經"], ans: "C", detail: "咀嚼活動中，CN V3支配咀嚼肌；CN VII支配頰肌；CN XII支配舌肌移動食物。迷走神經不直接參與咀嚼運動。" },
+      { id: 85, year: "113", exam: "牙醫師", q: "Q85. 下列何者不是成對的軟腭肌肉？", options: ["A. 腭張肌", "B. 腭提肌", "C. 懸壅垂肌", "D. 莖突咽肌（stylopharyngeus）"], ans: "D", detail: "莖突咽肌（stylopharyngeus）屬於上提咽部的咽內肌，而非軟腭肌肉。" },
+      { id: 86, year: "113", exam: "牙醫師", q: "Q86. 下列那一種舌乳突不含有味蕾？", options: ["A. 絲狀乳突（filiform papillae）", "B. 菌狀乳突", "C. 葉狀乳突", "D. 輪廓乳突"], ans: "A", detail: "絲狀乳突（filiform papillae）表面覆蓋高度角化的複層扁平上皮，主要具備機械摩擦功能，不含味蕾。" },
+      { id: 87, year: "113", exam: "牙醫師", q: "Q87. 支配軟腭感覺的小腭神經是那一對顱神經的分支？", options: ["A. 第5對（CN V）", "B. 第7對", "C. 第9對", "D. 第10對"], ans: "A", detail: "小腭神經為三叉神經（CN V）之上顎神經（CN V2）的分支。" },
+      { id: 88, year: "113", exam: "牙醫師", q: "Q88. 下列何者為中咽收縮肌之起點？", options: ["A. 環狀軟骨與甲狀軟骨", "B. 舌骨與莖突舌骨韌帶", "C. 翼下顎縫與翼狀鈎", "D. 下顎骨頦棘"], ans: "B", detail: "中咽收縮肌起源於舌骨的大角與小角，以及莖突舌骨韌帶。" },
+      { id: 89, year: "113", exam: "牙醫師", q: "Q89. 下列何者為供應顎下腺之血管？ (1.上甲狀腺動脈 2.舌動脈 3.顏面動脈 4.上顎動脈)", options: ["A. 1, 2", "B. 3, 4", "C. 2, 3（舌動脈與顏面動脈）", "D. 1, 4"], ans: "C", detail: "顎下腺緊鄰舌骨與下顎骨下緣，其主要血液來自外頸動脈的分支——顏面動脈及舌動脈。" },
+      { id: 90, year: "113", exam: "牙醫師", q: "Q90. 與漿液細胞相較，純黏液細胞（mucous cell）缺乏下列何者？", options: ["A. tight junction", "B. gap junction", "C. intermediate junction", "D. intercellular canaliculi（細胞間小管）"], ans: "D", detail: "漿液性細胞之間常存在細小的細胞間小管（intercellular secretory canaliculi），而純黏液細胞無此構造。" },
+      { id: 91, year: "113", exam: "物治/職治", q: "Q91. 對照腹部九等分圖，下列關於消化器官所在的位置，何者錯誤？", options: ["A. 肝臟主要位於①右季肋區和②腹上區", "B. 脾臟主要位於②腹上區", "C. 直腸主要位於⑧下腹區", "D. 闌尾主要位於⑦右腹股溝區"], ans: "B", detail: "腹部九分法中，脾臟位於左上腹，即主要位於③左季肋區，而非②腹上區。", img: "image_e449e1.png" },
+      { id: 92, year: "113", exam: "物治/職治", q: "Q92. 下列那一條動脈最主要供應十二指腸近端（proximal part）的血液？", options: ["A. 肝總動脈（common hepatic artery）", "B. 脾動脈", "C. 胃左動脈", "D. 胃右動脈"], ans: "A", detail: "十二指腸近端主要由胃十二指腸動脈分支供應，而胃十二指腸動脈是肝總動脈（common hepatic artery）的分支。" },
+      { id: 93, year: "113", exam: "物治/職治", q: "Q93. 下列對於胃（stomach）的肌外層（muscularis externa）之敘述，何者正確？", options: ["A. 共有三層肌肉，三層肌肉纖維的走向皆不同", "B. 最外層肌肉走向為環走", "C. 最外層肌肉走向為斜走", "D. 最內層肌肉走向為環走"], ans: "A", detail: "胃的外肌層有三層：外縱（longitudinal）、中環（circular）、內斜（oblique），走向皆不相同。" },
+      { id: 94, year: "113", exam: "醫師", q: "Q94. 下列何者同時支配上、中、下三個咽縮肌（pharyngeal constrictors）？", options: ["A. 舌咽神經", "B. 三叉神經", "C. 迷走神經（vagus nerve）", "D. 舌下神經"], ans: "C", detail: "上、中、下三條咽收縮肌主要接受迷走神經（CN X）經咽神經叢的運動支配。" },
+      { id: 95, year: "113", exam: "醫師", q: "Q95. 解剖位置下，緊鄰心臟基部（base of the heart）、左心房正後方的器官為下列何者？", options: ["A. 氣管", "B. 降主動脈", "C. 食道（esophagus）", "D. 右主支氣管"], ans: "C", detail: "食道在後縱隔中向下延伸，恰好緊貼在心臟左心房的正後方。" },
+      { id: 96, year: "113", exam: "醫師", q: "Q96. 下列何者藉由橫膈的食道裂口（esophageal hiatus）由胸腔進入腹腔？", options: ["A. 胸管", "B. 主動脈", "C. 迷走神經幹（vagal trunk）", "D. 下腔靜脈"], ans: "C", detail: "橫膈食道裂孔（T10水平）有食道及左右迷走神經幹（vagal trunks）共同穿過。" },
+      { id: 97, year: "113", exam: "醫師", q: "Q97. 下列構造與十二指腸關係的敘述，何者最為正確？", options: ["A. 膽囊位於十二指腸上段的後方", "B. 下腔靜脈位於十二指腸水平段的前方", "C. 胰臟頭部位於十二指腸下降段的外側", "D. 上腸繫膜靜脈位於十二指腸水平段的前方"], ans: "D", detail: "上腸繫膜靜脈與動脈跨過十二指腸第三段（水平段）的前方（D正確）。" },
+      { id: 98, year: "113", exam: "醫師", q: "Q98. 下列何者一般不直接起源自腹腔動脈幹（celiac trunk）？", options: ["A. 左胃動脈", "B. 右胃動脈（right gastric artery）", "C. 肝總動脈", "D. 脾動脈"], ans: "B", detail: "腹腔動脈幹的三大直接分支為：左胃動脈、脾動脈、肝總動脈。右胃動脈發自肝固有動脈或肝總動脈。" },
+      { id: 99, year: "113", exam: "醫師", q: "Q99. 下列何種細胞主要分布在胃底腺，而沒有分布在胃幽門腺？", options: ["A. 主細胞（chief cells）", "B. 未分化細胞", "C. 黏液分泌細胞", "D. 腸內分泌細胞"], ans: "A", detail: "主細胞（分泌胃蛋白酶原）主要分布在胃底和胃體部的胃底腺，幽門腺缺乏主細胞。" },
+      { id: 100, year: "113", exam: "物治/職治", q: "Q100. 下列關於動脈與其供應的消化器官之配對，何者正確？", options: ["A. 腸繫膜上動脈／全部的胰臟", "B. 腹腔動脈幹／全部的肝臟", "C. 腸繫膜上動脈／全部的脾臟", "D. 腸繫膜下動脈／全部的直腸"], ans: "B", detail: "腹腔動脈幹（經肝總動脈與肝固有動脈）供應全部的肝臟血液（B正確）。" },
+      { id: 101, year: "114", exam: "醫師", q: "Q101. 下列何者是腹膜內器官（intraperitoneal organ）？", options: ["A. 胰臟", "B. 腎臟", "C. 十二指腸", "D. 迴腸（ileum）"], ans: "D", detail: "迴腸具有繫膜，屬於腹膜內器官。胰臟、腎臟、大部分十二指腸為腹膜後器官。" },
+      { id: 102, year: "114", exam: "醫師", q: "Q102. 進行闌尾（appendix）去除手術前，可藉由下列何種結構快速找到闌尾？", options: ["A. 腸脂垂", "B. 右結腸動脈", "C. 盲腸上的結腸帶（taenia coli of cecum）", "D. 迴結腸動脈"], ans: "C", detail: "結腸的三條結腸帶向盲腸近端延伸，最終匯集並終止於闌尾的根部，是定位闌尾的重要指標。" },
+      { id: 103, year: "114", exam: "醫師", q: "Q103. 下列何者不是腹腔幹（celiac trunk）的一級分支？", options: ["A. 總肝動脈", "B. 左胃動脈", "C. 胃十二指腸動脈（gastroduodenal artery）", "D. 脾動脈"], ans: "C", detail: "胃十二指腸動脈是總肝動脈的分支，屬於二級分支。" },
+      { id: 104, year: "114", exam: "醫師", q: "Q104. 下列關於胰臟（pancreas）發育的敘述，何者正確？", options: ["A. 由中胚層發育衍生出背胰芽和腹胰芽", "B. 當十二指腸旋轉至左側時，背腹胰芽癒合", "C. 腹胰芽主要發育為胰臟的鉤狀突（uncinate process）以及部分的頭端", "D. 環狀胰臟主要造成胃阻塞"], ans: "C", detail: "腹側胰芽形成胰臟的鉤狀突與胰頭下部（C正確）。胰臟源自內胚層（A錯）；十二指腸向右旋轉（B錯）；環狀胰臟造成十二指腸阻塞（D錯）。" },
+      { id: 105, year: "114", exam: "醫師", q: "Q105. 關於黏液細胞（mucous cell）的敘述，下列何者正確？", options: ["A. 黏液細胞的細胞核常位於細胞的中央", "B. H&E染色下，核周邊細胞質呈強嗜鹼性", "C. H&E染色下，頂部細胞質呈強嗜伊紅性", "D. 在 PAS染色下，黏液細胞之黏原顆粒常呈現 PAS陽性"], ans: "D", detail: "黏液細胞分泌的黏蛋白富含醣類，因此與 PAS 試劑反應呈現強陽性（D正確）。核扁平偏基底（A錯）。" },
+      { id: 106, year: "114", exam: "醫師", q: "Q106. 胃腺（gastric gland）的細胞中，何者主要分泌胃蛋白酶原，且在 H&E染色下呈現嗜鹼性？", options: ["A. 主細胞（chief cell）", "B. 黏液頸細胞", "C. 胃壁細胞", "D. 腸內分泌細胞"], ans: "A", detail: "胃主細胞具有高度發達的粗糙內質網（rER）以製造胃蛋白酶原，在 H&E 染色下呈現強烈嗜鹼性。" },
+      { id: 107, year: "114", exam: "醫師", q: "Q107. 消化道中，下列何者的黏膜層及黏膜下層皆具有分泌黏液的腺體？", options: ["A. 食道（esophagus）", "B. 胃", "C. 結腸", "D. 闌尾"], ans: "A", detail: "食道的黏膜層具有「食道賁門腺」，黏膜下層具有「食道腺」。在人體消化道中，只有食道和十二指腸同時在兩層具有腺體。" },
+      { id: 108, year: "114", exam: "放射師", q: "Q108. 下列何者的導管穿過頰肌（buccinator），開口於上排第二大臼齒的口腔前庭？", options: ["A. 腮腺（parotid gland）", "B. 下頜下腺", "C. 舌下腺", "D. 腭腺"], ans: "A", detail: "腮腺導管（Stensen's duct）穿過頰肌，開口於對應上顎第二大臼齒的頰黏膜乳頭處。" },
+      { id: 109, year: "114", exam: "放射師", q: "Q109. 下列何者是小腸的特徵？", options: ["A. 腸脂垂", "B. 環狀皺襞（circular folds）", "C. 庫弗氏細胞", "D. 小彎及大彎"], ans: "B", detail: "環狀襞（plicae circulares）是小腸黏膜與黏膜下層形成的褶皺特徵。" },
+      { id: 110, year: "114", exam: "牙醫師", q: "Q110. 有關舌之外在肌（extrinsic muscles）之敘述，下列何者正確？ (3.舌動脈有時貫穿舌骨舌肌 4.頦舌肌是最強壯的外在肌)", options: ["A. 1, 3", "B. 2, 4", "C. 3, 4", "D. 1, 2"], ans: "C", detail: "腭舌肌受 CN X 支配而非 CN XII；頦舌肌是最粗壯的外在肌，舌動脈行經於舌骨舌肌深面。" },
+      { id: 111, year: "114", exam: "牙醫師", q: "Q111. 關於口腔黏膜的敘述，下列何者正確？", options: ["A. 頰部為特殊口腔黏膜", "B. 舌頭背面為咀嚼黏膜", "C. 硬腭為咀嚼黏膜（masticatory mucosa）", "D. 非角化上皮為咀嚼黏膜特徵"], ans: "C", detail: "硬腭與牙齦為咀嚼黏膜，上皮具高度角化以耐受摩擦（C正確）。" },
+      { id: 112, year: "114", exam: "醫師", q: "Q112. 下列何者不具備腸繫膜（mesentery）的構造？", options: ["A. 十二指腸下降段（descending part of duodenum）", "B. 闌尾", "C. 乙狀結腸", "D. 橫結腸"], ans: "A", detail: "十二指腸下降段貼於後腹壁，無繫膜（腹膜後器官）。" },
+      { id: 113, year: "114", exam: "醫師", q: "Q113. 支配胃大彎處的左胃網膜動脈（left gastroepiploic artery），源自下列那條動脈？", options: ["A. 總肝動脈", "B. 左胃動脈", "C. 後胃動脈", "D. 脾動脈（splenic artery）"], ans: "D", detail: "左胃網膜動脈與胃短動脈均發自脾動脈。" },
+      { id: 114, year: "114", exam: "醫師", q: "Q114. 舌的發育過程中，那一咽弓會形成聯合部（copula），且最後會被擠壓而消失？", options: ["A. 第一咽弓", "B. 第二咽弓（second pharyngeal arch）", "C. 第三咽弓", "D. 第四咽弓"], ans: "B", detail: "聯合部（copula）主要由第二咽弓形成，在發育中被第三、四咽弓產生的咽下隆起覆蓋掩蓋。" },
+      { id: 115, year: "114", exam: "醫師", q: "Q115. 消化道中，下列何者不與其它三者位於同一器官？", options: ["A. 絨毛（villi）", "B. 乳糜管（lacteal）", "C. 環皺襞（plicae circulares）", "D. 結腸帶（teniae coli）"], ans: "D", detail: "絨毛、乳糜管、環狀襞均為小腸特有結構。結腸帶是大腸特有的平滑肌結構。" },
+      { id: 116, year: "114", exam: "放射師", q: "Q116. 下列何者參與肝門脈體循環吻合（portal-systemic anastomoses）？", options: ["A. 膽囊的靜脈", "B. 十二指腸第一段的靜脈", "C. 胃小彎的靜脈", "D. 食道下段的靜脈（esophagus）"], ans: "D", detail: "食道下段是門脈體循環吻合的著名位置（食道靜脈[體]與左胃靜脈[門]吻合）。" },
+      { id: 117, year: "114", exam: "放射師", q: "Q117. 下列何者不參與構成肝門三體（portal triad）？", options: ["A. 肝門小動脈", "B. 肝門小靜脈", "C. 膽囊（gallbladder）", "D. 膽管"], ans: "C", detail: "肝門三體由匯管區內伴行的膽管、肝小動脈、肝小靜脈構成，膽囊非其中一員。" },
+      { id: 118, year: "114", exam: "放射師", q: "Q118. 下列有關消化道外肌層（muscularis externa）的敘述，何者正確？", options: ["A. 食道有2層肌肉，最內層為縱走肌", "B. 胃有2層肌肉，最內層為環狀肌", "C. 幽門括約肌由縱走肌特別增厚形成", "D. 結腸帶是因為縱走肌特別增厚而形成"], ans: "D", detail: "結腸帶是由大腸外肌層的縱走肌在三個部位局限性特別增厚形成的平滑肌帶（D正確）。" },
+      { id: 119, year: "114", exam: "放射師", q: "Q119. 下列何者為消化系統中的附屬器官？", options: ["A. 胰臟（pancreas）", "B. 小腸", "C. 咽", "D. 食道"], ans: "A", detail: "胰臟為消化系統的附屬腺體。咽、食道、小腸屬於消化管本體。" },
+      { id: 120, year: "114", exam: "物治/職治", q: "Q120. 下列與嬰兒的吸吮（sucking）最相關？", options: ["A. 扁桃體", "B. 牙齒", "C. 軟腭（soft palate）", "D. 舌繫帶"], ans: "C", detail: "嬰兒吸吮時，軟腭（soft palate）會被提起封閉鼻咽，形成口內負壓以利吸吮。" },
+      { id: 121, year: "114", exam: "物治/職治", q: "Q121. 下列關於肝臟（liver）的敘述，何者錯誤？", options: ["A. 身體最大的消化腺體", "B. 由前側可見鐮狀韌帶將其分為左右兩葉", "C. 膽汁由膽囊製造並儲存", "D. 具備雙重血液供應"], ans: "C", detail: "膽汁由「肝細胞」製造，並排入膽道送往「膽囊」儲存與濃縮（膽囊本身不製造膽汁）。" },
+      { id: 122, year: "114", exam: "牙醫師", q: "Q122. 下列那一條肌肉未接受舌下動脈（sublingual artery）的血液供應？", options: ["A. 莖突舌肌", "B. 頦舌肌", "C. 腭舌肌（palatoglossus）", "D. 舌骨舌肌"], ans: "C", detail: "腭舌肌位於軟腭，主要接受腭升、腭降動脈等分支血液。其餘三條舌肌皆受舌下動脈供應。" },
+      { id: 123, year: "114", exam: "牙醫師", q: "Q123. 由分泌的唾液成分來看，腮腺與下列何者分泌的唾液較相似？", options: ["A. 唇腺", "B. 舌下腺", "C. 腭腺", "D. 馮艾勃納氏腺（von Ebner's gland）"], ans: "D", detail: "腮腺和 Von Ebner 氏腺均為純漿液性腺體（pure serous glands），分泌稀薄富含蛋白質的漿液。" },
+      { id: 124, year: "114", exam: "牙醫師", q: "Q124. 關於舌下腺（sublingual gland）之敘述，下列何者錯誤？", options: ["A. 為單純黏液腺（pure mucous gland）", "B. 其上界為口底黏膜", "C. 與腮腺相比，其紋狀管數量較少", "D. 其血流供應來自舌下動脈及頦下動脈"], ans: "A", detail: "舌下腺在組織學上為混合腺（主要為黏液腺，但有少數漿液性細胞及新月蓋帽），非單純黏液腺。" },
+      { id: 125, year: "114", exam: "物治/職治", q: "Q125. 膽汁由肝細胞分泌後直接進入十二指腸，其路徑順序下列何者正確？ (1.總膽管 2.左右肝管 3.膽小管 4.總肝管 5.肝胰壺腹)", options: ["A. 3-4-1-2-5", "B. 3-2-4-1-5", "C. 2-4-3-1-5", "D. 2-4-5-3-1"], ans: "B", detail: "膽汁路徑：膽小管 (3) -> 左右肝管 (2) -> 總肝管 (4) -> 總膽管 (1) -> 肝胰壺腹 (5)。" },
+      { id: 126, year: "114", exam: "物治/職治", q: "Q126. 下列關於腹膜（peritoneum）的敘述，何者正確？", options: ["A. 鐮狀韌帶將肝臟固定於後腹壁", "B. 橫結腸繫膜固定空腸與迴腸", "C. 腸繫膜（mesentery）可將空腸及迴腸固定於後腹壁", "D. 十二指腸為腹膜內器官"], ans: "C", detail: "繫膜本體（mesentery proper）將空腸和迴腸懸吊並固定於後腹壁（C正確）。" },
+      { id: 127, year: "115", exam: "醫師", q: "Q127. 主胰管及膽管會藉由何種結構共同開口於十二指腸下降段？", options: ["A. 肝管", "B. 大十二指腸乳頭（major duodenal papilla）", "C. 小十二指腸乳頭", "D. 膽囊管"], ans: "B", detail: "主胰管與總膽管匯合於肝胰壺腹後，共同開口於十二指腸降段的大十二指腸乳頭。" },
+      { id: 128, year: "115", exam: "醫師", q: "Q128. 關於肛管（anal canal），下列敘述何者正確？", options: ["A. 肛管的長度大約 10 至 15 公分", "B. 肛門內括約肌由平滑肌構成，圍繞在肛門口四周", "C. 交感神經纖維刺激肛門內括約肌收縮", "D. 肛門外括約肌只圍繞肛管的上段"], ans: "C", detail: "內肛門括約肌的收縮由交感神經刺激維持，以保持排便節制（C正確）。肛管長僅3-4公分。" },
+      { id: 129, year: "115", exam: "醫師", q: "Q129. 舌乳頭中，何者數量最多且構造最小？", options: ["A. 絲狀乳頭（filiform papillae）", "B. 蕈狀乳頭", "C. 輪廓乳頭", "D. 葉狀乳頭"], ans: "A", detail: "絲狀乳頭（filiform papillae）是舌表面數量最多、體積最小的乳頭。" },
+      { id: 130, year: "115", exam: "醫師", q: "Q130. 關於消化道的組織結構，下列敘述何者正確？", options: ["A. 黏膜肌層分布區域是由食道至盲腸為止", "B. 胃底腺分布是由黏膜層向下延伸至肌外層", "C. 小腸的絨毛主要是由黏膜下層突出腸腔的構造", "D. 闌尾的黏膜層有豐富的淋巴小結，有時會延伸到黏膜下層"], ans: "D", detail: "闌尾固有層充滿極發達的淋巴小結，經常向下穿過黏膜肌層突入黏膜下層（D正確）。" },
+      { id: 131, year: "115", exam: "放射師", q: "Q131. 下列肝小葉（liver lobule）的構造，何者所含的血液含氧量最低？", options: ["A. 肝門小靜脈", "B. 肝門小動脈", "C. 肝血竇", "D. 中央靜脈（central vein）"], ans: "D", detail: "中央靜脈位於肝小葉中心，收集流經肝血竇（已被肝細胞吸收消耗氧氣）後的血液，含氧量最低。" },
+      { id: 132, year: "115", exam: "放射師", q: "Q132. 關於口咽（oropharynx）的敘述，下列何者正確？", options: ["A. 其範圍從軟腭延伸到甲狀軟骨的高度", "B. 含有咽扁桃體", "C. 含有舌扁桃體（lingual tonsil）", "D. 內襯上皮為偽複層柱狀上皮"], ans: "C", detail: "口咽含有舌根部的舌扁桃體（C正確）。咽扁桃體位於鼻咽；口咽上皮為非角化複層扁平上皮。" },
+      { id: 133, year: "115", exam: "牙醫師", q: "Q133. 關於咀嚼性黏膜（masticatory mucosa）的敘述，下列何者錯誤？", options: ["A. 硬腭黏膜為咀嚼性黏膜", "B. 牙齦為咀嚼性黏膜", "C. 黏膜性質為角化或不完全角化", "D. 頰黏膜為咀嚼性黏膜"], ans: "D", detail: "頰黏膜屬於非角化的裏襯黏膜（lining mucosa），而非咀嚼性黏膜。" },
+      { id: 134, year: "115", exam: "牙醫師", q: "Q134. 有關腭柱（palatine pillar）之敘述，下列何者正確？ (1.前腭柱為腭舌皺摺 2.後腭柱為腭咽皺摺 3.前後腭柱間包含舌扁桃腺)", options: ["A. 僅1, 2", "B. 僅2, 3", "C. 僅1, 3", "D. 1, 2, 3"], ans: "A", detail: "前腭柱為腭舌弓，後腭柱為腭咽弓，兩者之間的扁桃體窩容納的是「腭扁桃體」（palatine tonsil），非舌扁桃體。" },
+      { id: 135, year: "115", exam: "牙醫師", q: "Q135. 喉咽部中，異物最可能卡在下列何種結構？", options: ["A. palatine tonsil", "B. lingual tonsil", "C. pharyngeal recess", "D. piriform recess（梨狀隱窩）"], ans: "D", detail: "異物（如魚刺）最常卡在喉咽部兩側的黏膜凹陷——梨狀隱窩（piriform recess）。" },
+      { id: 136, year: "115", exam: "牙醫師", q: "Q136. 對於吞嚥（swallowing）之動作機轉，下列何者錯誤？", options: ["A. 吞嚥包括有意識和無意識的動作", "B. 吞嚥起始於舌尖頂在硬腭前方，並將食團推向後方", "C. 軟腭上提使得食團主要藉由重力滑入口咽", "D. 一旦會厭淺溝感受到食團進入，會厭即會蓋住氣管入口"], ans: "C", detail: "吞嚥時食團的推送主要依靠舌肌與咽收縮肌群產生的連續主動推力與蠕動，重力非主要因素。" },
+      { id: 137, year: "115", exam: "牙醫師", q: "Q137. 有關顎下腺的敘述，下列何者錯誤？", options: ["A. 環繞下顎舌骨肌後方", "B. 其副交感神經控制系統主要為舌咽神經", "C. 分泌管道開口於舌下肉阜", "D. 其血液供應來自顏面及舌動脈"], ans: "B", detail: "支配顎下腺（與舌下腺）分泌的副交感神經源自顏面神經（CN VII）；舌咽神經（CN IX）負責腮腺。" },
+      { id: 138, year: "115", exam: "物治/職治", q: "Q138. 下列關於胰臟（pancreas）的敘述，何者正確？", options: ["A. 胰臟屬於腹膜內器官", "B. 胰臟的頭部位於十二指腸彎曲處，尾部則與脾臟相接觸", "C. 胰臟位於胃的後下方，橫結腸的前方", "D. 胰臟可藉由腸繫膜本體固定於後腹壁"], ans: "B", detail: "胰頭嵌在十二指腸C型彎曲中，胰尾延伸至脾門（B正確）。其為腹膜後器官。" },
+      { id: 139, year: "115", exam: "物治/職治", q: "Q139. 下列何者是小腸與大腸同時具有的構造？", options: ["A. 絨毛", "B. 腸腺（intestinal glands）", "C. 腸脂垂", "D. 環皺襞"], ans: "B", detail: "腸腺（Lieberkühn 氏隱窩）在小腸和大腸黏膜中皆有分布。" },
+      { id: 140, year: "115", exam: "醫師", q: "Q140. 下列何者的收縮不會使舌頭後移（retrusion）？", options: ["A. 上縱肌", "B. 下縱肌", "C. 舌骨舌肌", "D. 頦舌肌（genioglossus）"], ans: "D", detail: "頦舌肌（genioglossus）雙側收縮主要負責使舌頭「前伸（protrusion）」。" },
+      { id: 141, year: "115", exam: "醫師", q: "Q141. 下列何者與耳下腺（parotid gland）的血液供應最不相關？", options: ["A. 上頷動脈", "B. 枕動脈（occipital artery）", "C. 耳後動脈", "D. 面橫動脈"], ans: "B", detail: "枕動脈發自外頸動脈後方走向枕部深層肌肉，與耳下腺血液供應無關。" },
+      { id: 142, year: "115", exam: "醫師", q: "Q142. 下列關於胃（stomach）發育的敘述，何者正確？", options: ["A. 一開始右側膨大，產生胃大彎", "B. 發育時逆時針旋轉180度", "C. 原始背側胃繫膜因胃旋轉被帶至左側，形成網膜囊", "D. 幽門閉鎖多見於女嬰"], ans: "C", detail: "原始背側胃繫膜隨胃旋轉被拉向左側，形成網膜囊（C正確）。胃後壁發育快於前壁形成大彎；順時針旋轉90度。" },
+      { id: 143, year: "115", exam: "醫師", q: "Q143. 食道（esophagus）中那一段外肌層僅有平滑肌（smooth muscle）？", options: ["A. 中三分之一段", "B. 上三分之一段", "C. 下三分之一段（lower third）", "D. 上三分之二段"], ans: "C", detail: "食道外肌層：上 1/3 為純骨骼肌，中 1/3 為混合肌，下 1/3 則完全轉為純平滑肌。" },
+      { id: 144, year: "115", exam: "放射師", q: "Q144. 下列關於乳糜管（lacteal）的敘述，何者正確？", options: ["A. 位於大腸，負責吸收水分", "B. 位於小腸，負責吸收鹽類", "C. 位於小腸，主要負責吸收腸道中的脂肪", "D. 位於大腸，負責吸收脂肪"], ans: "C", detail: "乳糜管是位於小腸絨毛中央的盲端淋巴毛細管，專門吸收並運送脂肪。" },
+      { id: 145, year: "115", exam: "放射師", q: "Q145. 舌扁桃腺（lingual tonsil）主要位於下列何處？", options: ["A. 舌頭前方表面", "B. 舌頭後方表面（舌根）", "C. 舌繫帶兩側表面", "D. 舌頭側邊表面"], ans: "B", detail: "舌扁桃體分布於舌根（即舌頭後 1/3 的咽部表面）。" },
+      { id: 146, year: "115", exam: "放射師", q: "Q146. 下列那一條血管同時供應胰臟、胃和小腸？", options: ["A. 腸繫膜上動脈", "B. 胃十二指腸動脈（gastroduodenal artery）", "C. 脾動脈", "D. 左胃動脈"], ans: "B", detail: "胃十二指腸動脈發出胃網膜右動脈（胃）、胰十二指腸上前/後動脈（胰臟與十二指腸小腸），同時供應三器官。" },
+      { id: 147, year: "115", exam: "放射師", q: "Q147. 若進行結腸鏡檢查由肛門穿入，依序經過：(1.肛管 2.乙狀結腸 3.直腸 4.降結腸 5.橫結腸 6.升結腸)", options: ["A. 3-1-2-4-5-6", "B. 1-2-3-6-4-5", "C. 1-3-2-6-5-4", "D. 1-3-2-4-5-6"], ans: "D", detail: "解剖進鏡順序：肛管(1) -> 直腸(3) -> 乙狀結腸(2) -> 降結腸(4) -> 橫結腸(5) -> 升結腸(6)。" },
+      { id: 148, year: "115", exam: "物治/職治", q: "Q148. 面神經（facial nerve）受損時，下列那一個動作最容易受到影響？", options: ["A. 壓縮臉頰的吸吮（sucking）動作", "B. 抬升下巴並前引下頜", "C. 抬升下巴並後縮下頜", "D. 上下排牙齒進行研磨"], ans: "A", detail: "頰肌（buccinator）受顏面神經（CN VII）支配，收縮可壓縮臉頰進行吸吮。" },
+      { id: 149, year: "115", exam: "物治/職治", q: "Q149. 下列關於肝臟（liver）的敘述，何者錯誤？", options: ["A. 前表面有鐮狀韌帶將其分為左右兩葉", "B. 膽囊緊貼於肝臟的尾狀葉（caudate lobe）", "C. 肝臟巨噬細胞常位於肝竇狀隙壁上", "D. 肝細胞內具有發達的平滑內質網"], ans: "B", detail: "膽囊緊貼在肝臟臟面的膽囊窩，地位於右葉與「方形葉」（quadrate lobe）之間，非尾狀葉。" },
+      { id: 150, year: "115", exam: "物治/職治", q: "Q150. 下列有關腸繫膜（mesentery）的敘述，何者錯誤？", options: ["A. 腸繫膜是由單層的腹膜所構成", "B. 腸繫膜可儲存脂肪", "C. 腸繫膜固定腹腔器官的位置並連接腹壁", "D. 大網膜和小網膜都屬於腸繫膜"], ans: "A", detail: "腸繫膜是由雙層（double-layered）腹膜褶疊構成，非單層腹膜。" },
+      { id: 151, year: "115", exam: "牙醫師", q: "Q151. 下列有關唇紅緣區（vermilion zone）之敘述，何者正確？", options: ["A. 無毛囊、無汗腺", "B. 無毛囊、有汗腺", "C. 有毛囊、無汗腺", "D. 有毛囊、有汗腺"], ans: "A", detail: "唇紅區缺乏毛囊、汗腺與典型的皮脂腺，缺乏皮脂膜保護易乾裂。" },
+      { id: 152, year: "115", exam: "牙醫師", q: "Q152. 腭扁桃體位於那兩個肌肉之間？", options: ["A. 張腭帆肌及腭舌肌", "B. 張腭帆肌及提腭帆肌", "C. 腭舌肌及腭咽肌（palatoglossus & palatopharyngeus）", "D. 舌咽肌及腭咽肌"], ans: "C", detail: "腭扁桃體位於扁桃體窩中，前界為腭舌肌（前腭柱），後界為腭咽肌（後腭柱）。" },
+      { id: 153, year: "115", exam: "牙醫師", q: "Q153. 咽部淋巴組織形成一特殊防禦環構造，稱為？", options: ["A. Zinn's ring", "B. limbus", "C. Waldeyer's ring（華爾代爾氏環）", "D. annular ring"], ans: "C", detail: "咽部淋巴組織（咽、耳咽管、腭、舌扁桃體）包圍咽入口形成 Waldeyer 氏淋巴環。" },
+      { id: 154, year: "115", exam: "牙醫師", q: "Q154. 喉咽（laryngopharynx）的解剖位置對應頸椎的高度，下列何者正確？", options: ["A. C1～C2", "B. C2～C3", "C. C3～C4", "D. C4～C6"], ans: "D", detail: "喉咽（下咽）自會厭上緣/舌骨水平（約 C4）延伸至環狀軟骨下緣（約 C6）水平。" },
+      { id: 155, year: "115", exam: "牙醫師", q: "Q155. 關於頸動脈鞘（carotid sheath）的敘述，下列何者錯誤？", options: ["A. 在胸鎖乳突肌內側深層", "B. 內含總頸動脈、內頸靜脈與第九對腦神經", "C. 上起於顱底，下至胸腔", "D. 屬於頸部的深頸筋膜"], ans: "B", detail: "頸動脈鞘內包覆的神經為第十對腦神經（迷走神經 CN X），而非第九對。" },
+      { id: 156, year: "115", exam: "牙醫師", q: "Q156. 在正常齒列咀嚼食物時，下列牙齒形態特徵，何者可提供有益牙齦的適當刺激？", options: ["A. 頰舌側外形（facial and lingual contour）", "B. 牙骨質牙釉質交界", "C. 點角", "D. 窩"], ans: "A", detail: "牙冠頰舌面的適度凸度（外形高點）能在咀嚼時引導食物滑過牙齦，提供健康適度刺激。" },
+      { id: 157, year: "115", exam: "牙醫師", q: "Q157. 下列那個唾液腺的分泌單位（secretory end pieces）皆由純漿液性細胞所組成？", options: ["A. 腮腺（parotid gland）", "B. 顎下腺", "C. 舌下腺", "D. 軟腭小唾液腺"], ans: "A", detail: "成人三大主唾液腺中，只有腮腺（Parotid gland）的分泌單位完全由純漿液性腺泡組成。" }
+    ];
+
+    function App() {
+      // State Variables
+      const [viewMode, setViewMode] = useState('card'); // 'card' | 'quiz' | 'list'
+      const [selectedYear, setSelectedYear] = useState('ALL');
+      const [selectedExam, setSelectedExam] = useState('ALL');
+      const [searchQuery, setSearchQuery] = useState('');
+      
+      const [questions, setQuestions] = useState(rawQuestions);
+      const [currentIndex, setCurrentIndex] = useState(0);
+      const [isFlipped, setIsFlipped] = useState(false);
+      const [selectedOption, setSelectedOption] = useState(null);
+
+      // Saved state in localStorage
+      const [masteredIds, setMasteredIds] = useState(() => {
+        const saved = localStorage.getItem('digestive_mastered');
+        return saved ? JSON.parse(saved) : [];
+      });
+      const [starredIds, setStarredIds] = useState(() => {
+        const saved = localStorage.getItem('digestive_starred');
+        return saved ? JSON.parse(saved) : [];
+      });
+
+      useEffect(() => {
+        localStorage.setItem('digestive_mastered', JSON.stringify(masteredIds));
+      }, [masteredIds]);
+
+      useEffect(() => {
+        localStorage.setItem('digestive_starred', JSON.stringify(starredIds));
+      }, [starredIds]);
+
+      // Filtered Questions
+      const filteredQuestions = useMemo(() => {
+        return questions.filter(item => {
+          const matchYear = selectedYear === 'ALL' || item.year === selectedYear;
+          const matchExam = selectedExam === 'ALL' || item.exam === selectedExam;
+          const matchSearch = searchQuery === '' || 
+            item.q.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            item.detail.toLowerCase().includes(searchQuery.toLowerCase());
+          return matchYear && matchExam && matchSearch;
+        });
+      }, [questions, selectedYear, selectedExam, searchQuery]);
+
+      // Reset Current Index if Filter changed
+      useEffect(() => {
+        setCurrentIndex(0);
+        setIsFlipped(false);
+        setSelectedOption(null);
+      }, [selectedYear, selectedExam, searchQuery]);
+
+      const currentCard = filteredQuestions[currentIndex] || null;
+
+      // Handle Randomize
+      const handleShuffle = () => {
+        const shuffled = [...questions].sort(() => Math.random() - 0.5);
+        setQuestions(shuffled);
+        setCurrentIndex(0);
+        setIsFlipped(false);
+        setSelectedOption(null);
+      };
+
+      // Reset Progress
+      const handleResetProgress = () => {
+        if (confirm('確定要重置所有掌握與標記紀錄嗎？')) {
+          setMasteredIds([]);
+          setStarredIds([]);
+        }
+      };
+
+      // Navigation
+      const handleNext = () => {
+        if (currentIndex < filteredQuestions.length - 1) {
+          setCurrentIndex(prev => prev + 1);
+          setIsFlipped(false);
+          setSelectedOption(null);
+        }
+      };
+
+      const handlePrev = () => {
+        if (currentIndex > 0) {
+          setCurrentIndex(prev => prev - 1);
+          setIsFlipped(false);
+          setSelectedOption(null);
+        }
+      };
+
+      // Toggle Mastered
+      const toggleMastered = (id) => {
+        setMasteredIds(prev => 
+          prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+      };
+
+      // Toggle Starred
+      const toggleStarred = (id) => {
+        setStarredIds(prev => 
+          prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+      };
+
+      return (
+        <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col min-h-screen">
+          
+          {/* HEADER */}
+          <header className="mb-6 border-b border-slate-700 pb-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-400">
+                  <i className="fa-solid font-bold fa-notes-medical text-teal-400 mr-2"></i>
+                  111-115年國考 消化系統國考閃卡
+                </h1>
+                <p className="text-xs md:text-sm text-slate-400 mt-1">
+                  解剖學、組織學與胚胎學 歷屆高頻試題速記卡
+                </p>
+              </div>
+
+              {/* STATS BADGES */}
+              <div className="flex items-center gap-3 bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700">
+                <div className="text-center">
+                  <div className="text-xs text-slate-400">總題數</div>
+                  <div className="text-lg font-bold text-teal-400">{rawQuestions.length}</div>
+                </div>
+                <div className="h-6 w-[1px] bg-slate-700"></div>
+                <div className="text-center">
+                  <div className="text-xs text-slate-400">已掌握</div>
+                  <div className="text-lg font-bold text-emerald-400">{masteredIds.length}</div>
+                </div>
+                <div className="h-6 w-[1px] bg-slate-700"></div>
+                <div className="text-center">
+                  <div className="text-xs text-slate-400">星號標記</div>
+                  <div className="text-lg font-bold text-amber-400">{starredIds.length}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* CONTROLS & FILTER BAR */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-3">
+              
+              {/* Mode Toggle */}
+              <div className="md:col-span-5 flex bg-slate-800 p-1 rounded-xl border border-slate-700">
+                <button 
+                  onClick={() => setViewMode('card')}
+                  className={`flex-1 py-2 text-xs md:text-sm font-semibold rounded-lg transition-all ${viewMode === 'card' ? 'bg-teal-500 text-slate-900 shadow-lg' : 'text-slate-300 hover:text-white'}`}
+                >
+                  <i className="fa-solid fa-clone mr-1"></i> 單卡閃卡
+                </button>
+                <button 
+                  onClick={() => setViewMode('quiz')}
+                  className={`flex-1 py-2 text-xs md:text-sm font-semibold rounded-lg transition-all ${viewMode === 'quiz' ? 'bg-teal-500 text-slate-900 shadow-lg' : 'text-slate-300 hover:text-white'}`}
+                >
+                  <i className="fa-solid fa-list-check mr-1"></i> 刷題測驗
+                </button>
+                <button 
+                  onClick={() => setViewMode('list')}
+                  className={`flex-1 py-2 text-xs md:text-sm font-semibold rounded-lg transition-all ${viewMode === 'list' ? 'bg-teal-500 text-slate-900 shadow-lg' : 'text-slate-300 hover:text-white'}`}
+                >
+                  <i className="fa-solid fa-table-list mr-1"></i> 全題總覽
+                </button>
+              </div>
+
+              {/* Year Filter */}
+              <div className="md:col-span-2">
+                <select 
+                  value={selectedYear}
+                  onChange={e => setSelectedYear(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-teal-400"
+                >
+                  <option value="ALL">🗓️ 全部年份</option>
+                  <option value="111">111 年</option>
+                  <option value="112">112 年</option>
+                  <option value="113">113 年</option>
+                  <option value="114">114 年</option>
+                  <option value="115">115 年</option>
+                </select>
+              </div>
+
+              {/* Exam Filter */}
+              <div className="md:col-span-2">
+                <select 
+                  value={selectedExam}
+                  onChange={e => setSelectedExam(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-teal-400"
+                >
+                  <option value="ALL">🩺 全部類別</option>
+                  <option value="醫師">醫師高考</option>
+                  <option value="牙醫師">牙醫師高考</option>
+                  <option value="放射師">醫事放射師</option>
+                  <option value="物治/職治">物理/職能治療</option>
+                </select>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="md:col-span-3 flex gap-2">
+                <button 
+                  onClick={handleShuffle}
+                  title="隨機排序"
+                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-teal-400 border border-slate-700 text-sm font-medium rounded-xl py-2.5 px-3 transition"
+                >
+                  <i className="fa-solid fa-shuffle mr-1"></i> 隨機打亂
+                </button>
+                <button 
+                  onClick={handleResetProgress}
+                  title="重置學習紀錄"
+                  className="bg-slate-800 hover:bg-rose-950 text-rose-400 border border-slate-700 text-sm rounded-xl p-2.5 transition"
+                >
+                  <i className="fa-solid fa-rotate-right"></i>
+                </button>
+              </div>
+
+            </div>
+
+            {/* SEARCH BAR (For List Mode or quick lookup) */}
+            {viewMode === 'list' && (
+              <div className="mt-3">
+                <input 
+                  type="text"
+                  placeholder="🔍 搜尋題目關鍵字或詳解（例如：肝門靜脈、腮腺、十二指腸...）"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-teal-400"
+                />
+              </div>
+            )}
+          </header>
+
+          {/* MAIN CONTENT AREA */}
+          <main className="flex-1 flex flex-col justify-center">
+
+            {filteredQuestions.length === 0 ? (
+              <div className="text-center py-16 bg-slate-800/40 rounded-2xl border border-slate-700">
+                <i className="fa-solid fa-folder-open text-4xl text-slate-500 mb-3"></i>
+                <p className="text-slate-400 text-lg">沒有符合條件的題目，請重新調整篩選器。</p>
+              </div>
+            ) : (
+              <>
+                {/* 1. FLASHCARD MODE */}
+                {viewMode === 'card' && currentCard && (
+                  <div className="flex flex-col items-center">
+                    
+                    {/* Progress Indicator */}
+                    <div className="w-full max-w-2xl flex items-center justify-between text-xs text-slate-400 mb-2 px-1">
+                      <span>當前進度：{currentIndex + 1} / {filteredQuestions.length}</span>
+                      <span className="flex items-center gap-2">
+                        {masteredIds.includes(currentCard.id) && (
+                          <span className="text-emerald-400 font-semibold"><i className="fa-solid fa-circle-check"></i> 已掌握</span>
+                        )}
+                        {starredIds.includes(currentCard.id) && (
+                          <span className="text-amber-400 font-semibold"><i className="fa-solid fa-star"></i> 已收藏</span>
+                        )}
+                      </span>
+                    </div>
+
+                    {/* 3D FLASHCARD CONTAINER */}
+                    <div className="w-full max-w-2xl min-h-[460px] md:min-h-[440px] perspective-1000 cursor-pointer mb-6" onClick={() => setIsFlipped(!isFlipped)}>
+                      <div className={`relative w-full h-full min-h-[460px] md:min-h-[440px] rounded-2xl transition-transform-600 transform-style-3d shadow-2xl ${isFlipped ? 'rotate-y-180' : ''}`}>
+                        
+                        {/* FRONT SIDE */}
+                        <div className="absolute inset-0 w-full h-full bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 flex flex-col justify-between backface-hidden overflow-y-auto">
+                          <div>
+                            {/* Card Tag Top */}
+                            <div className="flex justify-between items-center mb-4">
+                              <span className="bg-teal-500/10 text-teal-300 border border-teal-500/30 text-xs font-semibold px-3 py-1 rounded-full">
+                                {currentCard.year}年國考 • {currentCard.exam}
+                              </span>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); toggleStarred(currentCard.id); }}
+                                className={`text-lg transition ${starredIds.includes(currentCard.id) ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'}`}
+                              >
+                                <i className="fa-solid fa-star"></i>
+                              </button>
+                            </div>
+
+                            {/* Question Title */}
+                            <h3 className="text-lg md:text-xl font-bold text-slate-100 leading-relaxed mb-4">
+                              {currentCard.q}
+                            </h3>
+
+                            {/* Question Image if present */}
+                            {currentCard.img && (
+                              <div className="mb-4 flex justify-center">
+                                <img 
+                                  src={currentCard.img} 
+                                  alt={`題號 #${currentCard.id} 參考圖片`} 
+                                  className="max-h-48 md:max-h-56 object-contain rounded-xl border border-slate-700 bg-slate-900/80 p-2 shadow-md"
+                                />
+                              </div>
+                            )}
+
+                            {/* Options List */}
+                            <div className="space-y-2">
+                              {currentCard.options.map((opt, idx) => (
+                                <div key={idx} className="bg-slate-900/60 border border-slate-700/60 rounded-xl px-3.5 py-2 text-sm text-slate-300">
+                                  {opt}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Front Footer hint */}
+                          <div className="text-center text-xs text-teal-400 font-medium flex items-center justify-center gap-1 mt-4">
+                            <i className="fa-solid fa-hand-pointer animate-bounce"></i> 點擊卡片查看解答與詳解
+                          </div>
+                        </div>
+
+                        {/* BACK SIDE */}
+                        <div className="absolute inset-0 w-full h-full bg-slate-850 border-2 border-teal-500/50 rounded-2xl p-6 flex flex-col justify-between backface-hidden rotate-y-180 bg-gradient-to-b from-slate-800 to-slate-900 overflow-y-auto">
+                          <div>
+                            <div className="flex justify-between items-center mb-3">
+                              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-xs font-bold px-3 py-1 rounded-full">
+                                🔑 正確答案：{currentCard.ans}
+                              </span>
+                              <span className="text-xs text-slate-400">題號 #{currentCard.id}</span>
+                            </div>
+
+                            <div className="mt-2">
+                              <h4 className="text-sm font-bold text-teal-400 mb-2 flex items-center">
+                                <i className="fa-solid fa-lightbulb mr-2"></i> 國考關鍵詳解：
+                              </h4>
+                              <p className="text-sm md:text-base text-slate-200 leading-relaxed bg-slate-900/80 p-4 rounded-xl border border-slate-700/80 max-h-[220px] overflow-y-auto">
+                                {currentCard.detail}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Back Action */}
+                          <div className="flex justify-between items-center pt-2 border-t border-slate-800 mt-4">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); toggleMastered(currentCard.id); }}
+                              className={`text-xs md:text-sm font-semibold px-4 py-2 rounded-xl transition flex items-center gap-2 ${
+                                masteredIds.includes(currentCard.id) 
+                                  ? 'bg-emerald-600 text-white' 
+                                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                              }`}
+                            >
+                              <i className="fa-solid fa-check"></i> {masteredIds.includes(currentCard.id) ? '已標記掌握' : '標記為已掌握'}
+                            </button>
+
+                            <span className="text-xs text-slate-400">點擊任意處翻回正面</span>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    {/* CARD CONTROLS */}
+                    <div className="flex items-center gap-4 w-full max-w-2xl">
+                      <button 
+                        onClick={handlePrev}
+                        disabled={currentIndex === 0}
+                        className="flex-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 py-3 rounded-xl border border-slate-700 font-semibold transition flex items-center justify-center gap-2"
+                      >
+                        <i className="fa-solid fa-arrow-left"></i> 上一題
+                      </button>
+                      <button 
+                        onClick={handleNext}
+                        disabled={currentIndex === filteredQuestions.length - 1}
+                        className="flex-1 bg-teal-500 hover:bg-teal-400 disabled:opacity-40 text-slate-900 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20"
+                      >
+                        下一題 <i className="fa-solid fa-arrow-right"></i>
+                      </button>
+                    </div>
+
+                  </div>
+                )}
+
+                {/* 2. QUIZ MODE */}
+                {viewMode === 'quiz' && currentCard && (
+                  <div className="max-w-2xl mx-auto w-full bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-xs text-slate-400">測驗進度：{currentIndex + 1} / {filteredQuestions.length}</span>
+                      <span className="text-xs bg-teal-500/10 text-teal-300 px-2.5 py-1 rounded-md border border-teal-500/30">
+                        {currentCard.year}年 • {currentCard.exam}
+                      </span>
+                    </div>
+
+                    <h3 className="text-lg font-bold text-slate-100 mb-4 leading-relaxed">
+                      {currentCard.q}
+                    </h3>
+
+                    {/* Question Image if present */}
+                    {currentCard.img && (
+                      <div className="mb-6 flex justify-center">
+                        <img 
+                          src={currentCard.img} 
+                          alt={`題號 #${currentCard.id} 參考圖片`} 
+                          className="max-h-56 md:max-h-64 object-contain rounded-xl border border-slate-700 bg-slate-900/80 p-2 shadow-md"
+                        />
+                      </div>
+                    )}
+
+                    {/* Interactive Choices */}
+                    <div className="space-y-3 mb-6">
+                      {currentCard.options.map((opt, idx) => {
+                        const optKey = ['A', 'B', 'C', 'D'][idx];
+                        const isSelected = selectedOption === optKey;
+                        const isCorrect = optKey === currentCard.ans;
+                        
+                        let btnStyle = "bg-slate-900 hover:bg-slate-750 border-slate-700 text-slate-200";
+                        if (selectedOption !== null) {
+                          if (isCorrect) {
+                            btnStyle = "bg-emerald-950/80 border-emerald-500 text-emerald-200 font-bold";
+                          } else if (isSelected && !isCorrect) {
+                            btnStyle = "bg-rose-950/80 border-rose-500 text-rose-200";
+                          }
+                        }
+
+                        return (
+                          <button
+                            key={idx}
+                            disabled={selectedOption !== null}
+                            onClick={() => setSelectedOption(optKey)}
+                            className={`w-full text-left p-4 rounded-xl border text-sm transition-all flex items-center justify-between ${btnStyle}`}
+                          >
+                            <span>{opt}</span>
+                            {selectedOption !== null && isCorrect && (
+                              <i className="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+                            )}
+                            {selectedOption !== null && isSelected && !isCorrect && (
+                              <i className="fa-solid fa-circle-xmark text-rose-400 text-lg"></i>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Explanation Box on Answer Selected */}
+                    {selectedOption !== null && (
+                      <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6 animate-fadeIn">
+                        <div className="flex items-center gap-2 text-sm font-bold mb-2">
+                          {selectedOption === currentCard.ans ? (
+                            <span className="text-emerald-400"><i className="fa-solid fa-check"></i> 回答正確！</span>
+                          ) : (
+                            <span className="text-rose-400"><i className="fa-solid fa-xmark"></i> 回答錯誤！正確答案是 ({currentCard.ans})</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-300 leading-relaxed">
+                          <strong className="text-teal-400">💡 詳解：</strong> {currentCard.detail}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Quiz Navigation */}
+                    <div className="flex justify-between items-center pt-2">
+                      <button 
+                        onClick={handlePrev}
+                        disabled={currentIndex === 0}
+                        className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 rounded-xl text-xs font-semibold text-slate-200"
+                      >
+                        上一題
+                      </button>
+                      <button 
+                        onClick={handleNext}
+                        disabled={currentIndex === filteredQuestions.length - 1}
+                        className="px-6 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-900 rounded-xl text-sm font-bold"
+                      >
+                        下一題 <i className="fa-solid fa-arrow-right ml-1"></i>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. FULL LIST OVERVIEW MODE */}
+                {viewMode === 'list' && (
+                  <div className="space-y-4 max-w-4xl mx-auto w-full">
+                    {filteredQuestions.map((item) => (
+                      <div key={item.id} className="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-lg hover:border-slate-600 transition">
+                        <div className="flex justify-between items-start gap-2 mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="bg-teal-500/10 text-teal-300 border border-teal-500/30 text-xs font-semibold px-2.5 py-0.5 rounded-md">
+                              {item.year}年 • {item.exam}
+                            </span>
+                            <span className="text-xs text-slate-400">題號 #{item.id}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => toggleStarred(item.id)}
+                              className={`text-sm ${starredIds.includes(item.id) ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400'}`}
+                            >
+                              <i className="fa-solid fa-star"></i>
+                            </button>
+                            <button 
+                              onClick={() => toggleMastered(item.id)}
+                              className={`text-sm ${masteredIds.includes(item.id) ? 'text-emerald-400' : 'text-slate-600 hover:text-slate-400'}`}
+                            >
+                              <i className="fa-solid fa-circle-check"></i>
+                            </button>
+                          </div>
+                        </div>
+
+                        <h4 className="font-bold text-slate-100 text-base mb-3 leading-relaxed">
+                          {item.q}
+                        </h4>
+
+                        {/* Question Image if present */}
+                        {item.img && (
+                          <div className="mb-4 flex justify-center">
+                            <img 
+                              src={item.img} 
+                              alt={`題號 #${item.id} 參考圖片`} 
+                              className="max-h-56 md:max-h-64 object-contain rounded-xl border border-slate-700 bg-slate-900/80 p-2 shadow-md"
+                            />
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+                          {item.options.map((opt, i) => (
+                            <div 
+                              key={i} 
+                              className={`text-xs p-2.5 rounded-lg border ${
+                                ['A','B','C','D'][i] === item.ans 
+                                  ? 'bg-emerald-950/40 border-emerald-500/60 text-emerald-300 font-semibold' 
+                                  : 'bg-slate-900/50 border-slate-800 text-slate-400'
+                              }`}
+                            >
+                              {opt}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-750 text-xs text-slate-300 leading-relaxed">
+                          <span className="text-teal-400 font-bold mr-1">🔑 答案：({item.ans})</span>
+                          <span className="text-slate-400">💡 詳解：{item.detail}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              </>
+            )}
+
+          </main>
+
+          {/* FOOTER */}
+          <footer className="mt-12 text-center text-xs text-slate-500 border-t border-slate-800 pt-4 pb-2">
+            111-115年專技高考消化系統解剖學/組織學/胚胎學 • 閃卡系統
+          </footer>
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
